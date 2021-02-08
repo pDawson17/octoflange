@@ -58,12 +58,12 @@ class sql_handler:
 
     def insert_node(self, node_tup, node_uname = "", node_sig = ""):
         """
-           node_tup is node tuple-> (uname, ip, port, signature)
+           node_tup is node tuple-> (ip, port, uname, signature)
         """
         signature = hashlib.sha256((node_tup[0]+node_tup[4]).encode('utf-8')).hexdigest()
         app_process = sqlite3.connect('app_process::memory:', check_same_thread=False)
         app_process_cursor = app_process.cursor()
-        app_process_cursor.execute("INSERT INTO nodes VALUES (:uname, :ip, :port, :signature)", {"uname":node_tup[0], "ip":node_tup[1], "port":node_tup[2], "signature":node_sig})
+        app_process_cursor.execute("INSERT INTO nodes VALUES (:ip, :port, uname, :signature)", {"ip":node_tup[0], "port":node_tup[1], "uname":node_tup[2], "signature":node_sig})
         app_process.commit()
         app_process.close()
 
@@ -309,11 +309,11 @@ class sql_handler:
         if app_process_cursor.fetchone()[0]==1:
             return
         app_process_cursor.execute("""
-            CREATE TABLE nodes (
-                uname text,
+            CREATE TABLE nodes ( 
                 ip text,
                 port integer,
-                siganture blob
+                uname text
+                siganture blob,
             )
                 """)
         app_process.commit()

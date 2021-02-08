@@ -12,16 +12,14 @@ class BlockView(GridLayout): #probably change to floatlayout eventually
     def __init__(self, data):
         self.root = GridLayout(cols=2, size_hint_y=.7)
         self.data = data
-        print("in blockview", self.data)
+        self.index = data['index']
         if self.data == None:
             print("no data entered to blockview")
             self.root.add_widget(Label(text="error getting data"))
         
-        print("in blockview", self.data)
         #loop thru & add all comments for now
         comments = self.data['comments']
         for i in comments:
-            print("in comments", comments, i)
             self.root.add_widget(Label(text=comments[i]['comment'], font_size=10))
         if len(comments) == 0:
             self.root.add_widget(Label(text="no comments", font_size=10))
@@ -33,7 +31,8 @@ class BlockView(GridLayout): #probably change to floatlayout eventually
 
     def button_press(self, instance):
         print("NAVIGATE TO CLOSER BLOCKVIEW", self.data)
-
+        #now either a popup for each one or navigate
+        #to a third screen that ill set up to look at a specific one
 class BlockchainDisplay(GridLayout): #replace w/ screen later
 
     def __init__(self):
@@ -41,7 +40,6 @@ class BlockchainDisplay(GridLayout): #replace w/ screen later
         self.data = app.blockchain.chain
         if self.data == None:
             print("no data entered to blockchain display")
-        #print("data is in bc display", data)
         
         self.root = GridLayout(cols=1, spacing=1, size_hint_y = 2)
         self.root.bind(minimum_height=self.root.setter('height'))

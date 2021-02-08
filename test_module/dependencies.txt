@@ -1,0 +1,4 @@
+#for this project
+pip3 install kivy
+sudo dnf install xclip xsel
+

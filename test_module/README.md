@@ -1,2 +1,2 @@
-<h1>PYTHON KIVY TEST APP</h1>
-<p1>apologies for the duplicate files will clean up later</p1>
+<h1>Blockchain Comedy Gambling </h1>
+<p1>To run run main.py with sys.argv as port</p1>

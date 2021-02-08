@@ -38,12 +38,14 @@ class Blockchain:
 
     def collect_chain(self, chain, comments):
         self.chain_collection.append(chain)
-        for i in comments:
-            self.add_comment(i, self.hash(i['uname']+i['comment']))
+        for i in comments.keys():
+#comment sig topic uname
+            self.add_comment(comments[i]["comment"], comments[i]["signature"], comments[i]["topic"], comments[i]["uname"])
         if len(self.chain_collection) > 5:
             self.consensus()
             self.chain_collection = []
             return self.chain
+        #TODO: Merge likes
         return None
 
     def export_chain(self):
