@@ -1,4 +1,5 @@
 from kivy.uix.widget import Widget
+from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
@@ -11,6 +12,7 @@ class BlockView(GridLayout): #probably change to floatlayout eventually
     def __init__(self, data):
         self.root = GridLayout(cols=2, size_hint_y=.7)
         self.data = data
+        print("in blockview", self.data)
         if self.data == None:
             print("no data entered to blockview")
             self.root.add_widget(Label(text="error getting data"))
@@ -20,10 +22,12 @@ class BlockView(GridLayout): #probably change to floatlayout eventually
         comments = self.data['comments']
         for i in comments:
             print("in comments", comments, i)
-            self.root.add_widget(Label(text=comments[i], font_size=10))
+            self.root.add_widget(Label(text=comments[i]['comment'], font_size=10))
         if len(comments) == 0:
             self.root.add_widget(Label(text="no comments", font_size=10))
         button = Button(text="view block", font_size=10)
+        button.bind(on_press=self.button_press)
+
         self.root.add_widget(button)
         button.bind(on_press=self.button_press)
 
@@ -32,8 +36,9 @@ class BlockView(GridLayout): #probably change to floatlayout eventually
 
 class BlockchainDisplay(GridLayout): #replace w/ screen later
 
-    def __init__(self, data):
-        self.data = data
+    def __init__(self):
+        app = App.get_running_app()
+        self.data = app.blockchain.chain
         if self.data == None:
             print("no data entered to blockchain display")
         #print("data is in bc display", data)
@@ -42,6 +47,5 @@ class BlockchainDisplay(GridLayout): #replace w/ screen later
         self.root.bind(minimum_height=self.root.setter('height'))
         for i in self.data:
             b = BlockView(i)
-            self.root.add_widget(Label(text="ok"))
             self.root.add_widget(b.root) #b.root
 

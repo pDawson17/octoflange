@@ -107,17 +107,17 @@ class Blockchain:
             self.comments[comment_signature] = {"comment":comment, "likes":{}, "dislikes":{}, "uname":uname, "timestamp":time.time(), "topic":topic, "signature":signature}
         #else compare them & their likes& update
         else:
-            r = self.update_likes(comment, signature,{}) #empty dict for likes
+            r = self.update_likes(comment, signature,{}, "", "") #empty dict for likes
         print("added comment, ", comment, " comments r now : ", self.comments)
     
-    def update_likes(self, comment, signature, likes_list):
-
+    def update_likes(self, comment, signature, likes_list, personal_sig, amt):
+    
         comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
             return 1
-        #likes list should be dict of 
+        #likes list should be dict of ur_sig: amt
         for i in likes_list:
-            if i not in self.comments[comment_signature]:
+            if i not in self.comments[comment_signature]["likes"]:
                 self.comments[i] = likes_list[i]
         return 0
 
@@ -154,7 +154,7 @@ class Blockchain:
         #1) Block Miner gets revenue off the top
         #2) Comment gets alloted portion of revenue based on % of likes it has. then commenter takes flat % + and rest goes to likers
         #3) Likers get a portion of their liked comments' share - based on how much they bet
-        return self.get_top_comments, "we arent doing that rn "
+        return self.get_top_comments(), "we arent doing that rn "
 
     def compute_transactions_draft_1(self): 
         transactions = {} #signature: {}

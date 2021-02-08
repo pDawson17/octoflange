@@ -27,16 +27,15 @@ class Comment(GridLayout):
         print("UPVOTE",self.data)
 
         app = App.get_running_app()
+        app.blockchain.update_likes(self.data["comment"], self.data["signature"], self.data["likes"], "Signature1", 1)
         #app.blockchain.like_comment()
 
-import time
 class CurrentBlockDisplay(GridLayout):
-    def __init__(self, block, comments):
-        self.block = block
-        print("comments", comments)
-        self.comments = comments
+    def __init__(self):
+        
         app = App.get_running_app()
-        print(app.port)
+        self.block = app.blockchain.chain[-1]
+        self.comments = app.blockchain.comments
         self.grid = GridLayout(rows=3, spacing=10, size_hint_x=.5, size_hint_y=2)
         for i in self.comments:
 

@@ -23,6 +23,7 @@ from kivy.vector import Vector
 from random import randint
 from components import BlockchainDisplay
 
+import sys
 from kivy.core.window import Window
 import time
 from components import BlockchainDisplay, CurrentBlockDisplay
@@ -33,20 +34,18 @@ class ChainScreen(Screen):
     def __init__(self):
         self.root = Screen(name="ChainScreen")
         #data is blockchain
-        scroll = ScrollView(size_hint=(1, .6), size=(Window.width, Window.height))
-        app = App.get_running_app()
-        data = app.blockchain.chain
+        self.scroll = ScrollView(size_hint=(1, .6), size=(Window.width, Window.height))
         print("blockchain data")
         grid = GridLayout(cols=1)
-        b = BlockchainDisplay(data)
-        scroll.add_widget(b.root)
-        grid.add_widget(scroll)
+        self.b = BlockchainDisplay()
+        self.scroll.add_widget(self.b.root)
+        grid.add_widget(self.scroll)
 
         #app = App.get_running_app()
         print("\n \n \n")
         print("\n")
-        refresh_chain = Button(text="get chain", size_hint_y=.2)
-        refresh_chain.bind(on_press=self.refresh_comments)
+        refresh_chain = Button(text="refresh chain", size_hint_y=.2)
+        refresh_chain.bind(on_press=self.refresh_chain)
         
         grid.add_widget(refresh_chain)
 
@@ -60,14 +59,13 @@ class ChainScreen(Screen):
         #print(app.sm.current)
         app.sm.current = "CurrentBlockScreen"
         #clear widget
-    def refresh_comments(self, instance):
+    def refresh_chain(self, instance):
         
         app = App.get_running_app()
-        print("refreshing")
-        #print(app.sm.current)
-        #if data == 1:
-         #   print('fail gettin data')
-        #print(json.loads(data._content)['chain']) 
+        self.scroll.clear_widgets()
+        self.b = BlockchainDisplay()
+        self.scroll.add_widget(self.b.root)
+               
 
 class CurrentBlockScreen(Screen):
     def __init__(self):
@@ -79,7 +77,7 @@ class CurrentBlockScreen(Screen):
         print(data," in CurrBlockScreen")
         #for i in data:
             #data is map of comments i think
-        self.block_display = CurrentBlockDisplay(data, comments).root
+        self.block_display = CurrentBlockDisplay().root
         self.grid.add_widget(self.block_display)
         self.grid.add_widget(Label(text="enter comment"))
 
@@ -108,7 +106,6 @@ class CurrentBlockScreen(Screen):
         print("on page switch") 
         app = App.get_running_app()
         app.sm.current = "ChainScreen"
-        print("\n \n")
 
         #app.root.current="CurrenBlockScreen"
     def submit_comment(self, instace):
@@ -124,14 +121,12 @@ class CurrentBlockScreen(Screen):
         #print(app.sm.current)
 
     def reload_current_block(self, instance):
-        app = App.get_running_app()
-        data = app.blockchain.chain[-1]
-        comments = app.blockchain.comments
-        print("adding data in reload YEEEEEEE", data, comments)
+        #app = App.get_running_app()
+        #data = app.blockchain.chain[-1]
         self.grid.remove_widget(self.block_display)
-        self.block_display = CurrentBlockDisplay(data, comments).root
+        self.block_display = CurrentBlockDisplay().root
         self.grid.add_widget(self.block_display)
-import sys
+
 ##refresh page within blockchain view probably ?
 class PCApp(App):
     i = 0
