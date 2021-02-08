@@ -27,7 +27,7 @@ class Blockchain:
             else:
                 self.chain =[]
         else:
-            self.chain = [] #find way to link to distributed storage
+            self.chain = [] 
         self.transactions = [] #list of obj: {"sender":sender_id, rate: recepients, rate:recip....}
         self.comments = {} #-> hash(signature+comment):{uname, signature, comment, timestamp, category, likes={}}, dislikes
         if len(self.chain) == 0:

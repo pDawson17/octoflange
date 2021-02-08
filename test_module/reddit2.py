@@ -72,30 +72,37 @@ class ChainScreen(Screen):
 class CurrentBlockScreen(Screen):
     def __init__(self):
         self.root = Screen(name="CurrentBlockScreen")
-        grid = GridLayout(cols = 1)
+        self.grid = GridLayout(cols = 1)
         app = App.get_running_app()
-        data = app.blockchain.chain  
+        data = app.blockchain.chain[-1] 
         comments = app.blockchain.comments
         print(data," in CurrBlockScreen")
         #for i in data:
             #data is map of comments i think
-        grid.add_widget(CurrentBlockDisplay(data, comments).root)
-        grid.add_widget(Label(text="enter comment"))
+        self.block_display = CurrentBlockDisplay(data, comments).root
+        self.grid.add_widget(self.block_display)
+        self.grid.add_widget(Label(text="enter comment"))
 
         self.comment = TextInput()
-        grid.add_widget(self.comment)
+        self.grid.add_widget(self.comment)
         submit_comment = Button(text="submit")
         submit_comment.bind(on_press=self.submit_comment)
 
         mine = Button(text="mine")
         mine.bind(on_press=self.mine)
 
-        grid.add_widget(mine)
-        grid.add_widget(submit_comment)
+        self.grid.add_widget(mine)
+        self.grid.add_widget(submit_comment)
+
         switch_page = Button(text="Switch Page")
         switch_page.bind(on_press=self.switch_page)
-        grid.add_widget(switch_page)
-        self.root.add_widget(grid)
+
+        refresh_page = Button(text="Refresh Page")
+        refresh_page.bind(on_press=self.reload_current_block)
+
+        self.grid.add_widget(refresh_page)
+        self.grid.add_widget(switch_page)
+        self.root.add_widget(self.grid)
 
     def switch_page(self, instance):
         print("on page switch") 
@@ -115,6 +122,15 @@ class CurrentBlockScreen(Screen):
         app = App.get_running_app()
         app.blockchain.mine("UserName1")
         #print(app.sm.current)
+
+    def reload_current_block(self, instance):
+        app = App.get_running_app()
+        data = app.blockchain.chain[-1]
+        comments = app.blockchain.comments
+        print("adding data in reload YEEEEEEE", data, comments)
+        self.grid.remove_widget(self.block_display)
+        self.block_display = CurrentBlockDisplay(data, comments).root
+        self.grid.add_widget(self.block_display)
 import sys
 ##refresh page within blockchain view probably ?
 class PCApp(App):
