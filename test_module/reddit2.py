@@ -33,7 +33,7 @@ class ChainScreen(Screen):
     def __init__(self):
         self.root = Screen(name="ChainScreen")
         #data is blockchain
-        scroll = ScrollView(size_hint=(1, None), size=(Window.width, Window.height))
+        scroll = ScrollView(size_hint=(1, .6), size=(Window.width, Window.height))
         app = App.get_running_app()
         data = app.blockchain.chain
         print("blockchain data")
@@ -45,12 +45,12 @@ class ChainScreen(Screen):
         #app = App.get_running_app()
         print("\n \n \n")
         print("\n")
-        refresh_chain = Button(text="get chain")
+        refresh_chain = Button(text="get chain", size_hint_y=.2)
         refresh_chain.bind(on_press=self.refresh_comments)
         
         grid.add_widget(refresh_chain)
 
-        switch_page = Button(text="View Current Block")
+        switch_page = Button(text="View Current Block", size_hint_y=.2)
         switch_page.bind(on_press=self.switch_page)
         grid.add_widget(switch_page)
         self.root.add_widget(grid)
@@ -59,9 +59,7 @@ class ChainScreen(Screen):
         app = App.get_running_app()
         #print(app.sm.current)
         app.sm.current = "CurrentBlockScreen"
-        #print("\n \n")
-        #app.root.current="CurrenBlockScreen"
-
+        #clear widget
     def refresh_comments(self, instance):
         
         app = App.get_running_app()
@@ -107,6 +105,8 @@ class CurrentBlockScreen(Screen):
 
         #app.root.current="CurrenBlockScreen"
     def submit_comment(self, instace):
+
+        app = App.get_running_app()
         app.blockchain.add_comment(self.comment.text, "Signature1", "General", "UserName1")
         #ask update screen
     
@@ -122,8 +122,6 @@ class PCApp(App):
     def build(self):
         self.sm = ScreenManager(transition=WipeTransition())
         self.port = sys.argv[1]
-        if data == 1:
-            print('fail gettin data')
         
         self.blockchain = Blockchain()
         comments_page = CurrentBlockScreen()

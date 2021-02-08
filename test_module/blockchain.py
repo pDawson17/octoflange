@@ -102,17 +102,17 @@ class Blockchain:
 
     def add_comment(self, comment, signature, topic, uname):
         #later change to be list of objects, signature: object and do replacement decision
-        comment_signature = hashlib.sha256((signature+comment['comment']).encode('utf-8')).hexdigest()
+        comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
-            self.comments[comment_signature] = {"comment":comment, "likes":{}, "dislikes":{}, "uname":uname, "timestamp":time.time(), "topic":topic}
+            self.comments[comment_signature] = {"comment":comment, "likes":{}, "dislikes":{}, "uname":uname, "timestamp":time.time(), "topic":topic, "signature":signature}
         #else compare them & their likes& update
         else:
-            r = self.update_likes(comment, signature, comment['likes'])
-
+            r = self.update_likes(comment, signature,{}) #empty dict for likes
+        print("added comment, ", comment, " comments r now : ", self.comments)
     
-    def update_likes(self, comment, signature, likes_List):
+    def update_likes(self, comment, signature, likes_list):
 
-        comment_signature = hashlib.sha256((signature+comment['comment']).encode('utf-8')).hexdigest()
+        comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
             return 1
         #likes list should be dict of 
@@ -124,27 +124,9 @@ class Blockchain:
     def replace_comments(self, comments_list):
         self.comments = comments_list
 
-    def get_proof_of_work(self, prev_proof):
-        #make hash func based on
-        #something with a specific timestamp or something?
-        #not sure
-        #make it to where every 20 minutes we get the code.
-        #make this the winning id that we distribute from comments or something
-        #and hash that idk
-        new_proof = 1
-        #check that str has 4 leading 0s
-        check_proof = False
-        while check_proof is False:
-            hash_operation = hashlib.sha256(str(new_proof**2-prev_proof**2).encode()).hexdigest()
-            if hash_operation[:4] == '0000':
-                check_proof = True
-            else:
-                new_proof+=1
-        return new_proof
-
     def hash(self, block):
-        encoded_block = json.dumps(block, sort_keys = True).encode()
-        return hashlib.sha256(encoded_block).hexdigest
+        encoded_block =pickle.dumps(block)
+        return hashlib.sha256(encoded_block).hexdigest()
     
     def is_chain_valid(self, chain):
         prev_block = chain[0]
@@ -172,6 +154,9 @@ class Blockchain:
         #1) Block Miner gets revenue off the top
         #2) Comment gets alloted portion of revenue based on % of likes it has. then commenter takes flat % + and rest goes to likers
         #3) Likers get a portion of their liked comments' share - based on how much they bet
+        return self.get_top_comments, "we arent doing that rn "
+
+    def compute_transactions_draft_1(self): 
         transactions = {} #signature: {}
         total_revenue = 0 #{] looks cool
         top_commenter = {} #commenter sig, total likes for his block
@@ -195,6 +180,7 @@ class Blockchain:
                 for j in self.comments[i]["likes"]:
                     #transactions[j] += self.comments[i]["likes"][j] #should return amt liked
                     count += self.comments[i]["likes"][j]
+                print("SELF> COMMENTS SLEEP \n", self.comments)
                 top_commenter[self.comments[i]["signature"]] = count
                 #TODO: fix to compute for user who comments several times
         #now iterate thru top comments& assign payouts
@@ -208,7 +194,6 @@ class Blockchain:
                 transactions[l] += k["likes"][l]/top_commenter["signature"]
 
         return top_comments, transactions
-
     
 
     def consensus(self):
@@ -249,10 +234,12 @@ class Blockchain:
         #AND user requests a large amount, but 
         #this is intended for no more than 150 comments which i think should be pretty doable 
         #IF performance is bad do a binary search
-        sol =[] #cannot exceed 10
+        if len(self.comments) < 10:
+            return self.comments
+        sol =[random.choice(list(comments.items()))] #cannot exceed 10
         for i in self.comments.keys():
            
-            if len(self.comments[i]["likes"]) > sol[-1]:
+            if len(self.comments[i]["likes"]) > len(sol[-1]["likes"]):
                 if len(sol) < max_ret:
                     sol.pop(-1)
                 j = len(sol)-1
@@ -261,24 +248,28 @@ class Blockchain:
                     sol.insert(self.commnets[i])
         #now return comments to a dict
         sol_d = {}
+        print(sol)
         for j in sol:
+            print(j)
             sol_d[self.hash(j['uname']+j['comment'])] = j
         return sol_d
-
+    
+    def mining_proof(self):
+        return True
 
     def mine(self, uname=""):
         #make it to where you can't mine new block till old block
         #has been around for an hou
-        if time.time() - self.chain[-1]["timestamp"] < 60:
-            print("to early to mine")
-            return
+        #if time.time() - self.chain[-1]["timestamp"] < 60:
+         #   print("to early to mine")
+         #   return
         if len(self.comments) < 1:
-            print("not enough comments to mine")
+            print("not enough comments to mine, self.comments: ", self.comments)
             return
         allowed_index = 0 
         if ((time.time() - self.chain[-1]["timestamp"]) > 10000):
             allowed_index = 1
-        if (self.chain[-1]["comments"]['uname'] == uname) or (len(self.chain) < 5):
+        if (self.mining_proof()) or (len(self.chain) < 5):
             #self.comments = self.get_top_comments()
             self.comments, self.transactions = self.compute_transactions()
-            self.create_block(uname, self.hash(self.chain[-1]))
+            self.create_block(uname, self.hash(self.chain[-1]), "Signature1")
