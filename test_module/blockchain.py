@@ -206,7 +206,7 @@ class Blockchain:
         #chain list is: (ip, port): pickle(actual_chain_list)
         d = {} #dict to count most common chains
         for i in chain_list:
-            key = self.hash(chain_list[i])
+            key = self.hash(i)
             if key in d:
                 d[key]['count']+=1
             else:
@@ -214,15 +214,15 @@ class Blockchain:
         max_len = 0
         current_chain = self.chain
         curr_key = self.hash(current_chain) #current key in count dict
-        for j in d:
-            if len(j['list']) > max_len:
-                current_chain = j['list']
-                max_len = len(j['list'])
-            elif len(j['list']) == max_len:
-                if d[curr_key]['count'] < j['count']:
+        for j in d.keys():
+            if len(d[j]['list']) > max_len:
+                current_chain = d[j]['list']
+                max_len = len(current_chain)
+            elif len(d[j]['list']) == max_len:
+                if d[curr_key]['count'] < d[j]['count']:
                     current_chain = j['list']
                     curr_key = self.hash(current_chain)
-                elif d[current_chain]['count'] == j['count']:
+                elif d[self.hash(current_chain)]['count'] == d[j]['count']:
                     print("TIE IN PROTOCOL!")
                     #++self
         self.chain = current_chain

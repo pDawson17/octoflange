@@ -9,11 +9,9 @@ from kivy.clock import Clock
 import time
 import pickle
 import requests
-from request_maker import Request_Maker
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 import threading
-from server import Server
 import sys
 from kivy.app import runTouchApp
 from kivy.uix.screenmanager import ScreenManager, Screen, WipeTransition
@@ -108,7 +106,7 @@ class CurrentBlockScreen(Screen):
     def mine(self, instance):
 
         app = App.get_running_app()
-        app.blockchain.mine("UserName1")
+        app.blockchain.mine(app.uname)
 
     def reload_current_block(self, instance):
         #app = App.get_running_app()
@@ -159,7 +157,7 @@ class NetworkScreen(Screen):
         app = App.get_running_app()
         message = json.dumps({
             "type":"Conn_Request",
-            "node_tup":(app.host, int(app.port), ("Username1"+str(app.host)),("Signature1"+str(app.host))),
+            "node_tup":(app.host, int(app.port), app.uname,app.signature),
         }).encode("utf-8")
         
         if self.port.text != "":
@@ -227,10 +225,10 @@ class PCApp(App):
         self.message_recieved_lock.release()
 
     def send_blockchain_update(self, dt):
-        
         message = json.dumps({
             "type":"Blockchain_Update",
-            "signature":"",
+            "signature":self.signature, #i think we should sign the block ? then verification happens when we 
+            "uname":self.uname,
             "chain":self.blockchain.chain,
             "comments":self.blockchain.comments
         }).encode("utf-8")
@@ -244,6 +242,9 @@ class PCApp(App):
         self.port = sys.argv[1]
         self.host = socket.gethostbyname(socket.gethostname())
         self.nodes = []
+
+        self.signature = ""
+        self.uname = sys.argv[2]        
 
         self.message_recieved_queue = []
         self.message_recieved_lock = threading.Lock()

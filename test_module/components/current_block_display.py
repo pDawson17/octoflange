@@ -4,7 +4,6 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
-#need request maker for refresh
 import sys
 from kivy.app import App
 sys.path.append("../")
@@ -57,5 +56,5 @@ class CurrentBlockDisplay(GridLayout):
 
     def submit_comment(self, instance):
         app = App.get_running_app()
-        app.blockchain.add_comment(self.comment.text, ("Signature1"+str(app.port)), ("General"), ("User1"+str(app.port)))
+        app.blockchain.add_comment(self.comment.text, app.signature, "General", app.uname)
         self.comment.text = ""
