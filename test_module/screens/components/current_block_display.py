@@ -51,7 +51,7 @@ class Comment(GridLayout):
     def downvote(self, instance):
 
         app = App.get_running_app()
-        app.blockchain.update_likes(self.data["comment"], self.data["signature"], {app.signature: -1})
+        app.blockchain.update_dislikes(self.data["comment"], self.data["signature"], {app.signature: 1})
         #app.blockchain.like_comment()
 
 

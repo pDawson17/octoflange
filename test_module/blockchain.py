@@ -123,11 +123,23 @@ class Blockchain:
             return 1
         #likes list should be dict of ur_sig: amt
         for i in likes_list.keys():
-            if i not in self.comments[comment_signature]["likes"]:
+            if i not in self.comments[comment_signature]["likes"] and i not in self.comments[comment_signature]["dislikes"]:
                     self.comments[comment_signature]["likes"][i] = likes_list[i]
         
         return 0
 
+    def update_dislikes(self, comment, signature, dislikes_list):
+       #adds likes from likes list to ours if not already in 
+        comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
+        if comment_signature not in self.comments:
+            print("sig not in comments, returning (in update dislikes)")
+            return 1
+        #likes list should be dict of ur_sig: amt
+        for i in dislikes_list.keys():
+            if i not in self.comments[comment_signature]["dislikes"] and i not in self.comments[comment_signature]["likes"]:
+                    self.comments[comment_signature]["dislikes"][i] = dislikes_list[i]
+        
+        return 0
     def replace_comments(self, comments_list):
         self.comments = comments_list
 
@@ -158,7 +170,7 @@ class Blockchain:
         #publishes transactions based on role
         #so for this i think i'll so %profit splits 
         #algorithm:
-        #1) Block Miner gets revenue off the top
+        #1) Block Miner gets revenue _draft_1off the top
         #2) Comment gets alloted portion of revenue based on % of likes it has. then commenter takes flat % + and rest goes to likers
         #3) Likers get a portion of their liked comments' share - based on how much they bet
         return self.get_top_comments(), "we arent doing that rn "
@@ -167,34 +179,38 @@ class Blockchain:
         transactions = {} #signature: {}
         total_revenue = 0 #{] looks cool
         top_commenter = {} #commenter sig, total likes for his block
-        top_comments = self.get_top_comments()
+        top_comments = self.get_top_comments() #uname; comment{}
         comment_fee = 2
-        miner_fee = .1
+        miner_rate = .1 #miner gets 10% of block revenue
         num_comments = 5
-        commenter_fee = .05
+        commenter_rate = .05 #commenter gets 5% of their comment revenue
         for i in self.comments:
             if i not in top_comments:
-                #this is revenue
+                #all likes on this comement, and the comment fee are revenue
                 #self.comments[i]["signature"] 
                 for j in self.comments[i]["likes"]:
                     if j not in self.transactions:
                         transactions[j] = -1*self.comments[i]["likes"][j] #should return amt liked
                     else:
                         transactions[j] -= self.comments[i]["likes"][j] #should return amt liked
+
+                #could add dislikes here
+
                 transactions[self.comments[i]["signature"]] -= comment_fee
             else:
                 count = 0
                 for j in self.comments[i]["likes"]:
                     #transactions[j] += self.comments[i]["likes"][j] #should return amt liked
                     count += self.comments[i]["likes"][j]
-                print("SELF> COMMENTS SLEEP \n", self.comments)
                 top_commenter[self.comments[i]["signature"]] = count
                 #TODO: fix to compute for user who comments several times
         #now iterate thru top comments& assign payouts
         for k in top_comments.items():
+            #ERROR k is a TUPLE >?
+            print("IN COMPUTE TRANSACT, K IS", k) 
             divisible_amt = (top_commenter[k["signature"]]/total_revenue)-(miner_fee/num_comments)
-            transactions[k["signature"]] += divisible_amt*commenter_fee
-            divisible_amt = divisible_amt -  divisible_amt*commenter_fee
+            transactions[k["signature"]] += divisible_amt*commenter_rate
+            divisible_amt = divisible_amt -  divisible_amt*commenter_rate
 
             for l in k["likes"]:
                 #can assume that we've already encountered user in first loop
@@ -217,7 +233,7 @@ class Blockchain:
             else:
                 d[key]={'count':1, 'list':i}
         max_len = 0
-        current_chain = self.chain
+        current_chain = chain_list[0]
         curr_key = self.hash(current_chain) #current key in count dict
         for j in d.keys():
             if len(d[j]['list']) > max_len:
@@ -252,12 +268,11 @@ class Blockchain:
                 j = len(sol)-1
                 while ((j > 0) and (len(self.comments[i]["likes"]) > len(sol[j]["likes"]))):
                     j-=1
-                    sol.insert(self.commnets[i])
+                    sol.insert(self.comments[i])
         #now return comments to a dict
         sol_d = {}
         print(sol)
         for j in sol:
-            print(j)
             sol_d[self.hash(j['uname']+j['comment'])] = j
         return sol_d
     
@@ -278,5 +293,5 @@ class Blockchain:
             allowed_index = 1
         if (self.mining_proof()) or (len(self.chain) < 5):
             #self.comments = self.get_top_comments()
-            self.comments, self.transactions = self.compute_transactions()
+            self.comments, self.transactions = self.compute_transactions_draft_1()
             self.create_block(uname, self.hash(self.chain[-1]), "Signature1")

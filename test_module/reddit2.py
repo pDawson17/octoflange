@@ -42,6 +42,7 @@ class PCApp(App):
         self.run_server()
 
     def service_connection(self, conn, response):
+        
         data = conn.recv(1024)
         if not data:
             return

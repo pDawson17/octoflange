@@ -5,6 +5,8 @@ from kivy.uix.label import Label
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
+import json
+import threading
 
 class NetworkScreen(Screen):
     def __init__(self):
@@ -48,7 +50,7 @@ class NetworkScreen(Screen):
         app = App.get_running_app()
         message = json.dumps({
             "type":"Conn_Request",
-            "node_tup":(app.host, int(app.port), app.uname,app.signature),
+            "node_tup":(app.host, int(app.port), app.uname, app.signature),
         }).encode("utf-8")
 
         if self.port.text != "":
