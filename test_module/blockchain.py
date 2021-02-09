@@ -18,7 +18,8 @@ import time
 import random
 
 class Blockchain:
-
+    #TODO:
+        #add blockchain configs -> comment price, like minimum, block mine time, succession, etc
     def __init__(self, chain=None):
         if chain:
             p = pickle.loads(chain)
@@ -109,18 +110,22 @@ class Blockchain:
             self.comments[comment_signature] = {"comment":comment, "likes":{}, "dislikes":{}, "uname":uname, "timestamp":time.time(), "topic":topic, "signature":signature}
         #else compare them & their likes& update
         else:
-            r = self.update_likes(comment, signature,{}, "", "") #empty dict for likes
+            print("comment already exists")
+            return
+            #r = self.update_likes(comment, signature, comment["likes"]) #add likes
         print("added comment, ", comment, " comments r now : ", self.comments)
     
-    def update_likes(self, comment, signature, likes_list, personal_sig, amt):
-    
+    def update_likes(self, comment, signature, likes_list):
+       #adds likes from likes list to ours if not already in 
         comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
+            print("sig not in comments, returning (in update likes)")
             return 1
         #likes list should be dict of ur_sig: amt
-        for i in likes_list:
+        for i in likes_list.keys():
             if i not in self.comments[comment_signature]["likes"]:
-                self.comments[i] = likes_list[i]
+                    self.comments[comment_signature]["likes"][i] = likes_list[i]
+        
         return 0
 
     def replace_comments(self, comments_list):
@@ -220,9 +225,9 @@ class Blockchain:
                 max_len = len(current_chain)
             elif len(d[j]['list']) == max_len:
                 if d[curr_key]['count'] < d[j]['count']:
-                    current_chain = j['list']
+                    current_chain = d[j]['list']
                     curr_key = self.hash(current_chain)
-                elif d[self.hash(current_chain)]['count'] == d[j]['count']:
+                elif d[curr_key]['count'] == d[j]['count']:
                     print("TIE IN PROTOCOL!")
                     #++self
         self.chain = current_chain

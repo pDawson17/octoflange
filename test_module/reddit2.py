@@ -2,7 +2,6 @@ from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
-from kivy.app import runTouchApp
 from kivy.uix.label import Label
 import json
 from kivy.clock import Clock
@@ -15,161 +14,16 @@ import threading
 import sys
 from kivy.app import runTouchApp
 from kivy.uix.screenmanager import ScreenManager, Screen, WipeTransition
-from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty
-from kivy.vector import Vector
 from random import randint
-from components import BlockchainDisplay
 import sys
 from kivy.core.window import Window
 import time
-from components import BlockchainDisplay, CurrentBlockDisplay
+#from components import BlockchainDisplay, CurrentBlockDisplay
 from blockchain import Blockchain
 import socket
 
-class ChainScreen(Screen):
-    def __init__(self):
-        self.root = Screen(name="ChainScreen")
-        #data is blockchain
-        self.scroll = ScrollView(size_hint=(1, .6), size=(Window.width, Window.height))
-        grid = GridLayout(cols=1)
-        self.b = BlockchainDisplay()
-        self.scroll.add_widget(self.b.root)
-        grid.add_widget(self.scroll)
-
-        #app = App.get_running_app()
-        refresh_chain = Button(text="refresh chain", size_hint_y=.2)
-        refresh_chain.bind(on_press=self.refresh_chain)
-        
-        grid.add_widget(refresh_chain)
-
-        to_network = Button(text="To Netowrk View", size_hint_y=.2)
-        to_network.bind(on_press=self.switch_to_network)
-
-        switch_page = Button(text="View Current Block", size_hint_y=.2)
-
-        switch_page.bind(on_press=self.switch_page)
+from screens import *              
       
-        grid.add_widget(to_network)
-        grid.add_widget(switch_page)
-        self.root.add_widget(grid)
-
-    def switch_to_network(self, instance):
-        app = App.get_running_app()
-        app.sm.current = "NetworkScreen"
-
-    def switch_page(self, instance):
-        app = App.get_running_app()
-        app.sm.current = "CurrentBlockScreen"
-
-    def refresh_chain(self, instance):
-        
-        app = App.get_running_app()
-        self.scroll.clear_widgets()
-        self.b = BlockchainDisplay()
-        self.scroll.add_widget(self.b.root)
-               
-class CurrentBlockScreen(Screen):
-    def __init__(self):
-        self.root = Screen(name="CurrentBlockScreen")
-        self.grid = GridLayout(cols = 1) #block content, then comment scrollview, then text input
-
-        #for i in data:
-            #data is map of comments i think
-        mine = Button(text="mine")
-        mine.bind(on_press=self.mine)
-
-
-        switch_page = Button(text="Switch Page")
-        switch_page.bind(on_press=self.switch_page)
-
-        refresh_page = Button(text="Refresh Page")
-        refresh_page.bind(on_press=self.reload_current_block)
-        
-        toolbar = GridLayout(cols=3, size_hint_y=.3)
-        toolbar.add_widget(refresh_page)
-
-        toolbar.add_widget(switch_page)
-        toolbar.add_widget(mine)  
-        
-        self.grid.add_widget(toolbar)
-        self.root.add_widget(self.grid)
-
-        self.block_display = CurrentBlockDisplay(-1).root
-
-        self.grid.add_widget(self.block_display)
-        
-    def switch_page(self, instance):
-        app = App.get_running_app()
-        app.sm.current = "ChainScreen"
- 
-    def mine(self, instance):
-
-        app = App.get_running_app()
-        app.blockchain.mine(app.uname)
-
-    def reload_current_block(self, instance):
-        #app = App.get_running_app()
-        #data = app.blockchain.chain[-1]
-        self.grid.remove_widget(self.block_display)
-        self.block_display = CurrentBlockDisplay(-1).root
-        self.grid.add_widget(self.block_display)
-       
-class NetworkScreen(Screen):
-    def __init__(self):
-        self.root = Screen(name="NetworkScreen")
-        self.grid = GridLayout(cols=3)
-        
-        #TODO combine toolbars to on classe
-        toolbar = GridLayout(cols=3, size_hint_y=.3)
-
-        friends_view = GridLayout(rows=4)
-        
-        self.port = TextInput()
-        self.host = TextInput() #replace later with uname or sig or someting idk          
-
-        submit_request = Button(text="submit")
-        submit_request.bind(on_press=self.submit_conn_request)
-       
-        #TODO: friend_list = ScrollView() 
-        
-        friends_view.add_widget(Label(text="enter port"))
-        friends_view.add_widget(self.port)
-        
-        friends_view.add_widget(Label(text="enter host"))
-        friends_view.add_widget(self.host)
-
-        friends_view.add_widget(submit_request)
-
-        switch_page_curr = Button(text="To Current Block")
-        switch_page_curr.bind(on_press=self.to_curr)
-
-        toolbar.add_widget(switch_page_curr)
-
-        self.grid.add_widget(toolbar)
-        self.grid.add_widget(friends_view)
-
-        self.root.add_widget(self.grid) 
-
-    def submit_conn_request(self, instance):
-        #TODO:
-            #fill in sig, uname
-        app = App.get_running_app()
-        message = json.dumps({
-            "type":"Conn_Request",
-            "node_tup":(app.host, int(app.port), app.uname,app.signature),
-        }).encode("utf-8")
-        
-        if self.port.text != "":
-            threading.Thread(target=app.send_message, args=(message, self.host.text, int(self.port.text))).start()
-            app.nodes.append((self.host.text, int(self.port.text), "", ""))        
-        self.host.text = ""
-        self.port.text = "" 
-
-    def to_curr(self, instance):
-        app = App.get_running_app()
-        app.sm.current = "ChainScreen"
-
 ##refresh page within blockchain view probably ?
 class PCApp(App):
 

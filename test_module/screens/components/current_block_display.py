@@ -7,25 +7,53 @@ from kivy.core.window import Window
 import sys
 from kivy.app import App
 sys.path.append("../")
+import time
 
 class Comment(GridLayout):
     def __init__(self, data):
-        self.data = data
-        self.root = GridLayout(cols=3)
-
+        self.data = data #FIELDS: comment, likes, dislikes, uname, timestamp, topic, signature
+        self.root = GridLayout(rows=2, size_hint_x=.25)
+        print("IN COMMENT", data)
         self.text_label = Label(text=self.data["comment"], font_size=35)
+   
+        self.info = GridLayout(cols=6) 
 
-        self.root.add_widget(self.text_label)        
+        self.info.add_widget(Label(text="commenters name"))
+        self.info.add_widget(Label(text=self.data["uname"]))
+
+        self.info.add_widget(Label(text="timestamp"))
+        self.info.add_widget(Label(text=str(self.data["timestamp"])))
+
+        self.info.add_widget(Label(text="likes"))
+        self.info.add_widget(Label(text=str(len(self.data["likes"]))))
+
+        self.info.add_widget(Label(text="dislikes"))
+        self.info.add_widget(Label(text=str(len(self.data["dislikes"]))))
 
         upvote = Button(text="upvote")
         upvote.bind(on_press=self.upvote)
-        self.root.add_widget(upvote)
+        self.info.add_widget(upvote)
+ 
+        downvote = Button(text="downvote")
+        downvote.bind(on_press=self.downvote)
+        self.info.add_widget(downvote)
+      
+        self.root.add_widget(self.text_label)        
+
+        self.root.add_widget(self.info)
 
     def upvote(self, instance):
 
         app = App.get_running_app()
-        app.blockchain.update_likes(self.data["comment"], self.data["signature"], self.data["likes"], "Signature1", 1)
+        app.blockchain.update_likes(self.data["comment"], self.data["signature"], {app.signature: 1})
         #app.blockchain.like_comment()
+ 
+    def downvote(self, instance):
+
+        app = App.get_running_app()
+        app.blockchain.update_likes(self.data["comment"], self.data["signature"], {app.signature: -1})
+        #app.blockchain.like_comment()
+
 
 class CurrentBlockDisplay(GridLayout):
     def __init__(self, index):
@@ -33,7 +61,9 @@ class CurrentBlockDisplay(GridLayout):
         app = App.get_running_app()
         self.block = app.blockchain.chain[index]
         self.comments = app.blockchain.comments
-        self.grid = GridLayout(rows=1, spacing=10, size_hint_x=6, size_hint_y=1)
+        #so we want N commments to take up the page, size_hint_x will be: lencomments/num per page
+        size_x = max(len(self.comments)/4, 1) #but never less than 1
+        self.grid = GridLayout(rows=1, spacing=10, size_hint_x=size_x, size_hint_y=1)
         for i in self.comments:
 
             self.grid.add_widget(Comment(self.comments[i]).root)
