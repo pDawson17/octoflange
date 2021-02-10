@@ -12,11 +12,10 @@ import time
 class Comment(GridLayout):
     def __init__(self, data):
         self.data = data #FIELDS: comment, likes, dislikes, uname, timestamp, topic, signature
-        self.root = GridLayout(rows=2, size_hint_x=.25)
-        print("IN COMMENT", data)
+        self.root = GridLayout(rows=3, size_hint_x=.25)
         self.text_label = Label(text=self.data["comment"], font_size=35)
    
-        self.info = GridLayout(cols=6) 
+        self.info = GridLayout(rows=4, size_hint_y = .3) 
 
         self.info.add_widget(Label(text="commenters name"))
         self.info.add_widget(Label(text=self.data["uname"]))
@@ -30,17 +29,20 @@ class Comment(GridLayout):
         self.info.add_widget(Label(text="dislikes"))
         self.info.add_widget(Label(text=str(len(self.data["dislikes"]))))
 
+        self.button_bar = GridLayout(cols=2, size_hint_y=.15)
+        
         upvote = Button(text="upvote")
         upvote.bind(on_press=self.upvote)
-        self.info.add_widget(upvote)
+        self.button_bar.add_widget(upvote)
  
         downvote = Button(text="downvote")
         downvote.bind(on_press=self.downvote)
-        self.info.add_widget(downvote)
+        self.button_bar.add_widget(downvote)
       
         self.root.add_widget(self.text_label)        
 
         self.root.add_widget(self.info)
+        self.root.add_widget(self.button_bar)
 
     def upvote(self, instance):
 

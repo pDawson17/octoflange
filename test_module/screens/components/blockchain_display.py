@@ -10,24 +10,26 @@ import json
 class BlockView(GridLayout): #probably change to floatlayout eventually
 
     def __init__(self, data):
-        self.root = GridLayout(cols=2, size_hint_y=.7)
+        self.root = GridLayout(cols=3, size_hint_y=.7)
         self.data = data
         self.index = data['index']
         if self.data == None:
             print("no data entered to blockview")
             self.root.add_widget(Label(text="error getting data"))
         
-        #loop thru & add all comments for now
+        comment_grid = GridLayout(rows=1)
         comments = self.data['comments']
         for i in comments:
-            self.root.add_widget(Label(text=comments[i]['comment'], font_size=10))
+            comment_grid.add_widget(Label(text=comments[i]['comment'], font_size=10))
         if len(comments) == 0:
             self.root.add_widget(Label(text="no comments", font_size=10))
+        
+        self.root.add_widget(comment_grid)
+
         button = Button(text="view block", font_size=10)
         button.bind(on_press=self.button_press)
 
         self.root.add_widget(button)
-        button.bind(on_press=self.button_press)
 
     def button_press(self, instance):
         print("NAVIGATE TO CLOSER BLOCKVIEW", self.data)
