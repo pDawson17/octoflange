@@ -22,7 +22,7 @@ class ChainScreen(Screen):
         refresh_chain = Button(text="refresh chain", size_hint_y=.2)
         refresh_chain.bind(on_press=self.refresh_chain)
 
-        grid.add_widget(refresh_chain)
+        toolbar = GridLayout(cols=3, size_hint_y=.3)
 
         to_network = Button(text="To Netowrk View", size_hint_y=.2)
         to_network.bind(on_press=self.switch_to_network)
@@ -31,9 +31,16 @@ class ChainScreen(Screen):
 
         switch_page.bind(on_press=self.switch_page)
 
-        grid.add_widget(to_network)
-        grid.add_widget(switch_page)
-        self.root.add_widget(grid)
+        toolbar.add_widget(to_network)
+        toolbar.add_widget(switch_page)
+        toolbar.add_widget(refresh_chain)
+     
+        grid2= GridLayout(rows=2) 
+        grid2.add_widget(grid)
+        grid2.add_widget(toolbar)
+
+        self.root.add_widget(grid2) 
+        #self.root.add_widget(toolbar)
 
     def switch_to_network(self, instance):
         app = App.get_running_app()

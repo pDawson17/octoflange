@@ -22,7 +22,7 @@ class CurrentBlockScreen(Screen):
         switch_page = Button(text="Switch Page")
         switch_page.bind(on_press=self.switch_page)
 
-        refresh_page = Button(text="Refresh Page")
+        refresh_page = Button(text="Refresh Page", background_color="blue")
         refresh_page.bind(on_press=self.reload_current_block)
 
         toolbar = GridLayout(cols=3, size_hint_y=.3)
@@ -31,12 +31,16 @@ class CurrentBlockScreen(Screen):
         toolbar.add_widget(switch_page)
         toolbar.add_widget(mine)
 
-        self.grid.add_widget(toolbar)
         self.root.add_widget(self.grid)
 
         self.block_display = CurrentBlockDisplay(-1).root
 
-        self.grid.add_widget(self.block_display)
+        self.block_display_container=GridLayout(cols=1) #just to make refresh stay in one spot
+        self.block_display_container.add_widget(self.block_display)    
+
+        self.grid.add_widget(self.block_display_container)
+
+        self.grid.add_widget(toolbar)
 
     def switch_page(self, instance):
         app = App.get_running_app()
@@ -50,7 +54,7 @@ class CurrentBlockScreen(Screen):
     def reload_current_block(self, instance):
         #app = App.get_running_app()
         #data = app.blockchain.chain[-1]
-        self.grid.remove_widget(self.block_display)
+        self.block_display_container.remove_widget(self.block_display)
         self.block_display = CurrentBlockDisplay(-1).root
-        self.grid.add_widget(self.block_display)
+        self.block_display_container.add_widget(self.block_display)
 

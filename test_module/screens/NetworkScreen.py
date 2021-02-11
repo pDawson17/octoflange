@@ -5,8 +5,45 @@ from kivy.uix.label import Label
 from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
+from kivy.uix.scrollview import ScrollView
 import json
 import threading
+
+#class FriendsToolbar(GridLayout):
+    #def __init__(self):
+        #dm, direct transaction for now
+       # self.root = GridLayout(cols=3)
+       # self.send_money
+        
+
+class FriendsList(GridLayout):
+    def __init__(self):
+        self.root = GridLayout(cols=1)
+        self.scroll = ScrollView(size_hint=(1, .7))
+        self.friends_grid = GridLayout(cols=1)
+        
+        refresh_button = Button(text="refresh")
+        refresh_button.bind(on_press=self.refresh_friends)
+
+        self.root.add_widget(refresh_button) 
+        self.fill_friends_grid()        
+        self.scroll.add_widget(self.friends_grid)
+        self.root.add_widget(self.scroll)
+
+    def fill_friends_grid(self):
+        self.friends_grid.clear_widgets()
+        app = App.get_running_app()
+        for i in app.nodes:
+            friend = GridLayout(cols=5)
+            friend.add_widget(Label(text=i[0]))
+            friend.add_widget(Label(text=i[1]))
+            friend.add_widget(Label(text=i[2]))
+            friend.add_widget(Label(text=i[3]))
+            #friend.add_widget() dm button class
+            self.friends_grid.add_widget(friend)
+    
+    def refresh_friends(self, instance):
+        self.fill_friends_grid()
 
 class NetworkScreen(Screen):
     def __init__(self):
@@ -38,7 +75,13 @@ class NetworkScreen(Screen):
         switch_page_curr.bind(on_press=self.to_curr)
 
         toolbar.add_widget(switch_page_curr)
+    
+        self.friends_list = FriendsList()
+        
+        #self.balance = 0
+        #self.find_balance
 
+        self.grid.add_widget(self.friends_list.root)
         self.grid.add_widget(toolbar)
         self.grid.add_widget(friends_view)
 

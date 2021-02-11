@@ -21,7 +21,7 @@ import time
 #from components import BlockchainDisplay, CurrentBlockDisplay
 from blockchain import Blockchain
 import socket
-
+import random
 from screens import *              
       
 ##refresh page within blockchain view probably ?
@@ -98,7 +98,7 @@ class PCApp(App):
         self.host = socket.gethostbyname(socket.gethostname())
         self.nodes = []
 
-        self.signature = ""
+        self.signature = str(random.randint(0, 200))
         self.uname = sys.argv[2]        
 
         self.message_recieved_queue = []
