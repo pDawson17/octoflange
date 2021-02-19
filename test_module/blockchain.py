@@ -188,8 +188,75 @@ class Blockchain:
         #2) Comment gets alloted portion of revenue based on % of likes it has. then commenter takes flat % + and rest goes to likers
         #3) Likers get a portion of their liked comments' share - based on how much they bet
         return self.get_top_comments(), "we arent doing that rn "
-   
+  
+    def compute_transactions_draft_2(self):
+        transactions = {} #signature : {}
+        total_revenue = 0 #{] still looks cool, also amount is in Philcoin
+        top_comments = self.get_top_comments()
+        #miner_rate = .1 #percent given to miner off the top
+        commenter_rate = .2 #percent of generated income on their comment that they keep as income
+        revenue_per_comment = {} #comment_sig : total rev
 
+        top_comment_revenue = 0 #total of rev amount of top comments
+
+        #iterate thru all comments and all likes to find:
+            #1) total revenue
+            #2) amount liked per person on ALL POSTS
+            #3) amount of revenue generated per comment
+
+        for i in self.comments:
+            revenue_per_comment[i] = 0
+            for j in self.comments[i]["likes"]:
+                print("draft 2, ", j)
+                if j not in transactions:
+                    transactions[j] = -1*self.comments[i]["likes"][j]
+                else:
+                    transactions[j] -= self.comments[i]["likes"][j]
+                 
+                total_revenue += self.comments[i]["likes"][j]
+                revenue_per_comment[i] += self.comments[i]["likes"][j]
+
+            if i in top_comments:
+                #distributable revenue = total_revenue-top_revenue is revenue that we distribute (by percentage contribution) into  revenue_per_comment
+                top_comment_revenue += revenue_per_comment[i]  
+      
+
+        #adjust revenue_per_comment to give each comment a portion of revenue from losing comments
+
+        #iterate thru top comments, give commenters and users who liked top comments money back based on:
+            #1) miner gets flat miner_rate of total_reveue
+            #2) commenter gets flat commenter_rate of revenue_per_comment[(comment_sig)] + percent of earning based on comments who didnt win 
+            #3) liker gets 
+
+        #TODO:
+            #give miner a portion
+                #transactions need to have each user sign something on it 
+
+        distributable_revenue = total_revenue-top_comment_revenue #-whoever else gets any         
+        for k in top_comments:
+            share_portion = distributable_revenue*(revenue_per_comment[k]/top_comment_revenue) #percentage of distributable rev earned for a COMMENT is: (comment total likes / top comments total likes) 
+            #TODO:
+                #this is where you redistribute any wealth
+            
+            distributable_revenue -=  share_portion
+
+            #now distribute distributable_revenue amongst:
+                #1) whoever made the comment -> flat portion of share portion
+                #2) likers -> split up remaining share portion based on their amt liked
+            
+            #commenter gets flat percentage 
+            transactions[top_comments[k]["signature"]] = share_portion*commenter_rate
+            share_portion -= share_portion * commenter_rate        
+
+            for l in top_comments[k]["likes"]:
+                #now give people who liked a comment their share
+                #liker share_portion is top_comments[k]["likes"][l]/revenue_per_comment[k] 
+                transactions[l] += top_comments[k]["likes"][l]+ share_portion*(top_comments[k]["likes"][l]/revenue_per_comment[k])            
+
+                #share_portion -=  share_portion*(top_comments[k]["likes"][l]/revenue_per_comment[k])
+
+        return top_comments, transactions 
+ 
     def compute_transactions_draft_1(self): 
         transactions = {} #signature: {}
         total_revenue = 0 #{] looks cool
@@ -208,16 +275,15 @@ class Blockchain:
                         transactions[j] = -1*self.comments[i]["likes"][j] #should return amt liked
                     else:
                         transactions[j] -= self.comments[i]["likes"][j] #should return amt liked
-
                 #could add dislikes here
 
                 transactions[self.comments[i]["signature"]] -= comment_fee
             else:
                 for j in self.comments[i]["likes"]:
                     if j not in transactions:
-                        transacations[j] = self.comments[i]["likes"][j]
+                        transactions[j] = self.comments[i]["likes"][j]
                     else:
-                        transacations[j] += self.comments[i]["likes"][j]
+                        transactions[j] += self.comments[i]["likes"][j]
 
                 top_commenter[self.comments[i]["signature"]] = len(self.comments[i]["likes"])
                 #TODO: fix to compute for user who comments several times
@@ -313,5 +379,5 @@ class Blockchain:
             allowed_index = 1
         if (self.mining_proof()) or (len(self.chain) < 5):
             #self.comments = self.get_top_comments()
-            self.comments, self.transactions = self.compute_transactions_draft_1()
+            self.comments, self.transactions = self.compute_transactions_draft_2()
             self.create_block(uname, self.hash(self.chain[-1]), "Signature1")

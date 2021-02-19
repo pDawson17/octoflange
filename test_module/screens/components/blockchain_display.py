@@ -32,7 +32,7 @@ class BlockView(GridLayout): #probably change to floatlayout eventually
         self.root.add_widget(button)
 
     def button_press(self, instance):
-        print("NAVIGATE TO CLOSER BLOCKVIEW", self.data)
+        print("NAVIGATE TO CLOSER BLOCKVIEW", self.data['transactions'])
         #now either a popup for each one or navigate
         #to a third screen that ill set up to look at a specific one
 class BlockchainDisplay(GridLayout): #replace w/ screen later
