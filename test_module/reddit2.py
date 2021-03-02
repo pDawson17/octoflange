@@ -5,7 +5,6 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 import json
 from kivy.clock import Clock
-import time
 import pickle
 import requests
 from kivy.core.window import Window
@@ -23,11 +22,17 @@ from blockchain import Blockchain
 import socket
 import random
 from screens import *              
+from ecdsa import SigningKey, NIST384p
+from sql import sql_handler
       
 ##refresh page within blockchain view probably ?
 class PCApp(App):
 
+####
+# server functionalities
+####
     def run_server(self):
+         
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.host, int(self.port)))
         s.listen()
@@ -39,7 +44,7 @@ class PCApp(App):
             threading.Thread(target=self.service_connection, args=(conn, response)).start()
         s.close()
         print("server closed. trying again....")
-        self.run_server()
+        self.run_server() 
 
     def service_connection(self, conn, response):
         
@@ -49,7 +54,7 @@ class PCApp(App):
         conn.send(response)
         self.message_recieved_lock.acquire()    
         print("adding data to revienved que", data)    
-        self.message_recieved_queue.append(json.loads(data.decode("utf-8")))
+        self.message_recieved_queue.append(pickle.loads(data.decode("utf-8")))
         self.message_recieved_lock.release()        
         
     def send_message(self, message, dest_ip, dest_port):
@@ -80,31 +85,67 @@ class PCApp(App):
         self.message_recieved_lock.release()
 
     def send_blockchain_update(self, dt):
-        message = json.dumps({
+        vk_string = self.verifying_key.to_string()
+        message = pickle.dumps({
             "type":"Blockchain_Update",
-            "signature":self.signature, #i think we should sign the block ? then verification happens when we 
+            "verifying_key":vk_string, #i think we should sign the block ? then verification happens when we 
             "uname":self.uname,
             "chain":self.blockchain.chain,
             "comments":self.blockchain.comments
-        }).encode("utf-8")
+        })
         for i in self.nodes:
             #shuold be node tuple
             self.send_message(message, i[0], i[1])     
- 
+###
+# storage funcs
+###
+
+    def save_app(self):
+        self.sql_lock.acquire()
+        #save nodes and blockchain
+        for i in self.nodes:
+            self.storage_man.insert_node(i)
+        
+        #save blockchain
+        self.storage_man.replace_chain(self.blockchain.chainn)
+    
+        self.sql_lock.release()
+
+    def load_app(self):
+        #return nodes, blockchain
+        self.sql_lock.acquire()
+        saved_chain = self.storage_man.get_chain()
+        #TODO:
+            #or call replace_chain or somehtibg ?
+        self.blockchain.chain = saved_chain
+
+        saved_nodes = self.storage_man.get_nodes()
+        self.nodes = saved_nodes
+        self.sql_lock.release()    
+
     def build(self):
         self.sm = ScreenManager(transition=WipeTransition())
 
         self.port = sys.argv[1]
         self.host = socket.gethostbyname(socket.gethostname())
         self.nodes = []
+        
+        #TODO:
+            #Check if SK is in db/localstorage
+        self.private_key = SigningKey.generate(curve=NIST384p) #change so that this is ONLY accessed inside the sql handler and the signature is passed up
+        self.verifying_key = self.private_key.verifying_key   
+    
 
-        self.signature = str(random.randint(0, 200))
+        #self.load_app()
+        
         self.uname = sys.argv[2]        
 
         self.message_recieved_queue = []
         self.message_recieved_lock = threading.Lock()
 
-        #self.sql_lock = threading.Lock()
+        self.storage_man = sql_handler()
+
+        self.sql_lock = threading.Lock()
 
         self.blockchain = Blockchain()
         comments_page = CurrentBlockScreen()
@@ -117,7 +158,7 @@ class PCApp(App):
 
         Clock.schedule_interval(self.send_blockchain_update, 7)
         Clock.schedule_interval(self.read_message_queue, 10)
-
+        #Clock.schedule_interval(self.save_app(), 10)
         threading.Thread(target=self.run_server, args=()).start()        
 
         return runTouchApp(self.sm)

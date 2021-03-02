@@ -42,7 +42,6 @@ class sql_handler:
 ###############
 #1) Node Operators
 #**corresponds to line 16 in sql.py
-#TODO:  Implement search by signature
 ###############
     def get_nodes(self):
         """
@@ -56,14 +55,14 @@ class sql_handler:
         app_process.close()
         return sol
 
-    def insert_node(self, node_tup, node_uname = "", node_sig = ""):
+    def insert_node(self, node_tup):
         """
-           node_tup is node tuple-> (ip, port, uname, signature)
+           node_tup is node tuple-> (ip, port, uname, v_key_string)
         """
         signature = hashlib.sha256((node_tup[0]+node_tup[4]).encode('utf-8')).hexdigest()
         app_process = sqlite3.connect('app_process::memory:', check_same_thread=False)
         app_process_cursor = app_process.cursor()
-        app_process_cursor.execute("INSERT INTO nodes VALUES (:ip, :port, uname, :signature)", {"ip":node_tup[0], "port":node_tup[1], "uname":node_tup[2], "signature":node_sig})
+        app_process_cursor.execute("INSERT INTO nodes VALUES (:ip, :port, uname, :signature)", {"ip":node_tup[0], "port":node_tup[1], "uname":node_tup[2], "verifying_key":node_tup[3]})
         app_process.commit()
         app_process.close()
 
@@ -80,17 +79,18 @@ class sql_handler:
 
     def search_node(self, node_tup):
         """
-           node_tup is node tuple-> (uname, ip, port, signature)
+           node_tup is node tuple-> (ip, port, uname, verifying_key)
         """
-        signature = hashlib.sha1(node_tup[0]+node_tup[4])
+        #signature = hashlib.sha1(node_tup[0]+node_tup[4])
         app_process = sqlite3.connect('app_process::memory:', check_same_thread=False)
         app_process_cursor = app_process.cursor()
-        out = app_process_cursor.execute("SELECT FROM nodes WHERE signature==(:signature)", { "signature":signature })
+        out = app_process_cursor.execute("SELECT FROM nodes WHERE uname==(:uname)", { "uname":node_tup[2] })
        
         app_process.commit()
         app_process.close()
         if not out:
-            return (None,None)
+            return (None,None,None,None) #LOL why am i doing this
+            #**proceeds to not change it cuz its kinda funny 
         return out
         
 ##############
@@ -237,6 +237,7 @@ class sql_handler:
 #4) Message Queue Operators
 #**corresponds to line 123 in sql_flask.py
 ##############
+
     def insert_message(self, message_text, address_tup=("",0)):
         """
            message is already pickled and ready to go
@@ -313,7 +314,7 @@ class sql_handler:
                 ip text,
                 port integer,
                 uname text
-                siganture blob,
+                verifying_key blob,
             )
                 """)
         app_process.commit()
@@ -322,6 +323,9 @@ class sql_handler:
     def create_data_table(self):
         """
             creates data table
+                
+            Data is encrypted by hash of users pw
+            inside data is user data is hopefully their private key encrypted by a second pw
         """
         print("CREATE DATA")
         #data_i = sqlite3.connect('data.db', check_same_thread=False)
@@ -334,10 +338,8 @@ class sql_handler:
             CREATE TABLE localdata (
                 data_sig text,
                 data text,
-                attachment text,
-                likes text,
-                dislikes text,
-                owner text
+                checkin_time text,
+                owner_verifying_sig text
             )
                 """)
         data_i.commit()

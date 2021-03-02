@@ -12,6 +12,7 @@ import time
 class Comment(GridLayout):
     def __init__(self, data):
         self.data = data #FIELDS: comment, likes, dislikes, uname, timestamp, topic, signature
+        #comment signature shuold be a signed thing
         self.root = GridLayout(rows=3, size_hint_x=.25)
         self.text_label = Label(text=self.data["comment"], font_size=35)
    
@@ -47,13 +48,17 @@ class Comment(GridLayout):
     def upvote(self, instance):
 
         app = App.get_running_app()
-        app.blockchain.update_likes(self.data["comment"], self.data["signature"], {app.signature: 1})
+        #TODO:
+            #abstract process away to 
+        signature = app.private_key.sign(self.data["comment"].encode('utf-8'))
+        app.blockchain.update_likes(self.data["comment"], app.uname, {signature: 1})
         #app.blockchain.like_comment()
  
     def downvote(self, instance):
 
         app = App.get_running_app()
-        app.blockchain.update_dislikes(self.data["comment"], self.data["signature"], {app.signature: 1})
+        signature = app.private_key.sign(self.data["comment"].encode('utf-8'))
+        app.blockchain.update_dislikes(self.data["comment"], app.uname, {signature: 1})
         #app.blockchain.like_comment()
 
 
@@ -87,6 +92,10 @@ class CurrentBlockDisplay(GridLayout):
             self.root.add_widget(self.comments_bar)
 
     def submit_comment(self, instance):
+        if len(self.comment.text) < 3:
+            self.comment.text = ""
+            return
         app = App.get_running_app()
-        app.blockchain.add_comment(self.comment.text, app.signature, "General", app.uname)
+        signature = app.private_key.sign(self.comment.text.encode('utf-8'))
+        app.blockchain.add_comment(self.comment.text, signature, "General", app.uname)
         self.comment.text = ""

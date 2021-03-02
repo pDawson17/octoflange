@@ -20,6 +20,7 @@ import random
 class Blockchain:
     #TODO:
         #add blockchain configs -> comment price, like minimum, block mine time, succession, etc
+        #PC ID! using uname isnt good.... maybe use hash of private key and uname? Not sure. 
     def __init__(self, chain=None):
         if chain:
             p = pickle.loads(chain)
@@ -29,13 +30,17 @@ class Blockchain:
                 self.chain =[]
         else:
             self.chain = [] 
-        self.transactions = {} #signature: {"amt": +-(int), linked_account -> or something like that, to show who from/to. app transacions will be marked correctly
+
+        #TODO:
+            #Improve transaction lookup!!!!
+        #iterate linearly for now
+        self.transactions = [] #list of {"amt": +(int), sender_addr, recipient_addr, timestamp} 
         self.comments = {} #-> hash(signature+comment):{uname, signature, comment, timestamp, category, likes={}}, dislikes
         if len(self.chain) == 0:
            self.genesis = self.create_block(proof = 1, prev_hash = 0, signature='0') #create genesis block
         else:
             self.genesis = self.chain[0]
-        self.chain_collection = []
+        self.chain_collection = [] #chains!
 
     def collect_chain(self, chain, comments):
         self.chain_collection.append(chain)
@@ -57,20 +62,13 @@ class Blockchain:
         #imports pickled chain
         self.chain = pickle.loads(chain)
 
-    def find_balance(self, signature):
+    def find_balance(self, pc_id):
         #returns balance on current chain
         total = 0
         for i in self.chain:
-            if i in self.chain[i]["transactions"]:
-                amount+=self.chain[i]["transactions"]
+            if j in self.chain[i]["transactions"]:
+                if j[""] 
 
-    def add_transaction(self, signature, amount, to_signature):
-        if amount < 0:
-            print("requested money from someone, in this case we need to send request to be confirmed/rejected")
-            return 
-        if signature not in self.transactions:
-            self.transactions[signature] = {"amount":amount, "recipient":to_signature} #do we support multitransactions?? I guess we have to...?
-            #i need to better define signature and public ID
     def create_block(self, proof, prev_hash, signature): #make transactions an arg
         block = {
         'index' : len(self.chain)+1,
@@ -119,7 +117,7 @@ class Blockchain:
 
     def add_comment(self, comment, signature, topic, uname):
         #later change to be list of objects, signature: object and do replacement decision
-        comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
+        comment_signature = signature#hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
             self.comments[comment_signature] = {"comment":comment, "likes":{}, "dislikes":{}, "uname":uname, "timestamp":time.time(), "topic":topic, "signature":signature}
         #else compare them & their likes& update
@@ -129,9 +127,13 @@ class Blockchain:
             #r = self.update_likes(comment, signature, comment["likes"]) #add likes
         print("added comment, ", comment, " comments r now : ", self.comments)
     
-    def update_likes(self, comment, signature, likes_list):
-       #adds likes from likes list to ours if not already in 
-        comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
+    def update_likes(self, comment, uname, likes_list):
+        #adds likes from likes list to ours if not already in
+        #LIKES LIST: signedcomment:amt 
+        #TODO:
+            #THIS IS BROKEN FIX
+
+        comment_signature = hashlib.sha256((uname+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
             print("sig not in comments, returning (in update likes)")
             return 1
@@ -142,13 +144,21 @@ class Blockchain:
         
         return 0
 
-    def update_dislikes(self, comment, signature, dislikes_list):
+    def update_dislikes(self, comment, uname, dislikes_list):
        #adds likes from likes list to ours if not already in 
-        comment_signature = hashlib.sha256((signature+comment).encode('utf-8')).hexdigest()
+        comment_signature = hashlib.sha256((uname+comment).encode('utf-8')).hexdigest()
         if comment_signature not in self.comments:
             print("sig not in comments, returning (in update dislikes)")
             return 1
-        #likes list should be dict of ur_sig: amt
+        #likes list should be dict of uname : amt
+        #NOW:
+            #likes list needs to be:
+            #{
+            #    "amount": 0,
+            #    "uname": "",
+            #    "signed_comment":b''
+            #}
+
         for i in dislikes_list.keys():
             if i not in self.comments[comment_signature]["dislikes"] and i not in self.comments[comment_signature]["likes"]:
                     self.comments[comment_signature]["dislikes"][i] = dislikes_list[i]
@@ -180,17 +190,20 @@ class Blockchain:
             index+=1
         return True
     
-    def compute_transactions(self):
+    def verify_transactions(self):
         #publishes transactions based on role
         #so for this i think i'll so %profit splits 
         #algorithm:
         #1) Block Miner gets revenue _draft_1off the top
         #2) Comment gets alloted portion of revenue based on % of likes it has. then commenter takes flat % + and rest goes to likers
         #3) Likers get a portion of their liked comments' share - based on how much they bet
+        
+         
+
         return self.get_top_comments(), "we arent doing that rn "
   
-    def compute_transactions_draft_2(self):
-        transactions = {} #signature : {}
+    def compute_mass_transactions_draft_2(self):
+        transactions = {}
         total_revenue = 0 #{] still looks cool, also amount is in Philcoin
         top_comments = self.get_top_comments()
         #miner_rate = .1 #percent given to miner off the top
@@ -257,7 +270,7 @@ class Blockchain:
 
         return top_comments, transactions 
  
-    def compute_transactions_draft_1(self): 
+    def compute_mass_transactions_draft_1(self): 
         transactions = {} #signature: {}
         total_revenue = 0 #{] looks cool
         top_commenter = {} #commenter sig, total likes for his block
@@ -304,6 +317,7 @@ class Blockchain:
 
         return top_comments, transactions
     
+    #def compute_max_transactions_3():    
 
     def consensus(self):
         chain_list = self.chain_collection
@@ -379,5 +393,6 @@ class Blockchain:
             allowed_index = 1
         if (self.mining_proof()) or (len(self.chain) < 5):
             #self.comments = self.get_top_comments()
-            self.comments, self.transactions = self.compute_transactions_draft_2()
+            self.comments = self.get_top_comments()
+            #self.transactions = {}#self.compute_transactions_draft_2()
             self.create_block(uname, self.hash(self.chain[-1]), "Signature1")
