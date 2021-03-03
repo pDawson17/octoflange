@@ -49,16 +49,21 @@ class Comment(GridLayout):
 
         app = App.get_running_app()
         #TODO:
-            #abstract process away to 
+            #hash smaller portion of comment ? 
         signature = app.private_key.sign(self.data["comment"].encode('utf-8'))
-        app.blockchain.update_likes(self.data["comment"], app.uname, {signature: 1})
-        #app.blockchain.like_comment()
  
+        like_sig = hashlib.sha256(().encode('utf-8')).hexdigest()
+        likes_list = { signature: {app.pc_addr: 1}}
+        app.blockchain.update_likes_dislikes(self.data["comment"], likes_list, {})
+
     def downvote(self, instance):
 
         app = App.get_running_app()
         signature = app.private_key.sign(self.data["comment"].encode('utf-8'))
-        app.blockchain.update_dislikes(self.data["comment"], app.uname, {signature: 1})
+        
+        like_sig = hashlib.sha256(().encode('utf-8')).hexdigest()
+        likes_list = { signature: {app.pc_addr: 1}}
+        app.blockchain.update_likes_dislikes(self.data["comment"], {}, likes_list)
         #app.blockchain.like_comment()
 
 

@@ -146,8 +146,21 @@ class PCApp(App):
         self.storage_man = sql_handler()
 
         self.sql_lock = threading.Lock()
-
+        
+        self.pc_addr = "" #TODO generate this
+        #TODO:
+            #figure out way for users to send each other crypto and stay anon -> link unames to accounts 1 way ?        
         self.blockchain = Blockchain()
+        
+        #TODO:
+            #make more blockchains
+            #One that hosts peer contracts like so:
+
+                #pc addr of contract giver and lister
+                #each block mined the contract giver sends out a salt. contractors respond w/ data hashed. at end of cycle everyone who responded w/ matching hashes gets paid. result recorded in blockchain. 
+                #could also try to record access records.  
+                #at beginning of every mining if less than certain # respond, reallocate and record on bc whoever responds 
+        
         comments_page = CurrentBlockScreen()
         blockchain_page = ChainScreen()
         network_page = NetworkScreen()
