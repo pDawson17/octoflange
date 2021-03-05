@@ -46,24 +46,21 @@ class Comment(GridLayout):
         self.root.add_widget(self.button_bar)
 
     def upvote(self, instance):
-
-        app = App.get_running_app()
-        #TODO:
-            #hash smaller portion of comment ? 
-        signature = app.private_key.sign(self.data["comment"].encode('utf-8'))
- 
-        like_sig = hashlib.sha256(().encode('utf-8')).hexdigest()
-        likes_list = { signature: {app.pc_addr: 1}}
-        app.blockchain.update_likes_dislikes(self.data["comment"], likes_list, {})
-
-    def downvote(self, instance):
-
-        app = App.get_running_app()
-        signature = app.private_key.sign(self.data["comment"].encode('utf-8'))
+        self.update_likes(1)        
         
-        like_sig = hashlib.sha256(().encode('utf-8')).hexdigest()
-        likes_list = { signature: {app.pc_addr: 1}}
-        app.blockchain.update_likes_dislikes(self.data["comment"], {}, likes_list)
+    def downvote(self, instance):
+        self.update_likes(-1)
+
+    def update_likes(self, amt)
+        app = App.get_running_app()
+        tstamp = time.time()
+        #amount+uraddress+recip address (0 is to app)+timestamp is transaction hash
+        transaction_hash = hashlib.sha256(1, app.pc_addr, 0, tstamp)
+        signature = app.private_key.sign(transaction_hash.encode('utf-8'))
+        
+        like_sig = hashlib.sha256((app.uname+self.data["comment"]).encode('utf-8')).hexdigest()
+        likes_list = { like_sig: {"amt":amt, "tstamp":tstamp, "recipient":0, "sender": app.pc_addr, "signature": signature}
+        app.blockchain.update_likes(self.data["comment"], likes_list)
         #app.blockchain.like_comment()
 
 

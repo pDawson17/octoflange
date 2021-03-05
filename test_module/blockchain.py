@@ -34,7 +34,7 @@ class Blockchain:
         #TODO:
             #Improve transaction lookup!!!!
         #iterate linearly for now
-        self.transactions = [] #list of {"amt": +(int), sender_addr, recipient_addr, timestamp} 
+        self.transactions = [] #list of {"amt": +(int), sender_addr, recipient_addr, timestamp, other fields signed by sender} 
         self.comments = {} #-> hash(signature+comment):{uname, signature, comment, timestamp, category, likes={}}, dislikes
         if len(self.chain) == 0:
            self.genesis = self.create_block(proof = 1, prev_hash = 0, signature='0') #create genesis block
@@ -47,6 +47,7 @@ class Blockchain:
         for i in comments.keys():
 #comment sig topic uname
             self.add_comment(comments[i]["comment"], comments[i]["signature"], comments[i]["topic"], comments[i]["uname"])
+            self.update_likes(comments[i]["comment"], comments[i]["likes"]) 
         if len(self.chain_collection) > 5:
             self.consensus()
             self.chain_collection = []
@@ -123,7 +124,8 @@ class Blockchain:
             self.comments[comment_signature] = {"comment":comment, "likes":{}, "dislikes":{}, "uname":uname, "timestamp":time.time(), "pc_addr":pc_addr, "signed_comment":signed_comment}
         #else compare them & their likes& update
         else:
-            print("comment already exists")
+            print("comment already exists, updating likes")
+            
             return
         print("added comment, ", comment, " comments r now : ", self.comments)
    
@@ -160,74 +162,6 @@ class Blockchain:
         
         return self.get_top_comments(), "we arent doing that rn "
   
-    def compute_mass_transactions_draft_2(self):
-        transactions = {}
-        total_revenue = 0 #{] still looks cool, also amount is in Philcoin
-        top_comments = self.get_top_comments()
-        #miner_rate = .1 #percent given to miner off the top
-        commenter_rate = .2 #percent of generated income on their comment that they keep as income
-        revenue_per_comment = {} #comment_sig : total rev
-
-        top_comment_revenue = 0 #total of rev amount of top comments
-
-        #iterate thru all comments and all likes to find:
-            #1) total revenue
-            #2) amount liked per person on ALL POSTS
-            #3) amount of revenue generated per comment
-
-        for i in self.comments:
-            revenue_per_comment[i] = 0
-            for j in self.comments[i]["likes"]:
-                print("draft 2, ", j)
-                if j not in transactions:
-                    transactions[j] = -1*self.comments[i]["likes"][j]
-                else:
-                    transactions[j] -= self.comments[i]["likes"][j]
-                 
-                total_revenue += self.comments[i]["likes"][j]
-                revenue_per_comment[i] += self.comments[i]["likes"][j]
-
-            if i in top_comments:
-                #distributable revenue = total_revenue-top_revenue is revenue that we distribute (by percentage contribution) into  revenue_per_comment
-                top_comment_revenue += revenue_per_comment[i]  
-      
-
-        #adjust revenue_per_comment to give each comment a portion of revenue from losing comments
-
-        #iterate thru top comments, give commenters and users who liked top comments money back based on:
-            #1) miner gets flat miner_rate of total_reveue
-            #2) commenter gets flat commenter_rate of revenue_per_comment[(comment_sig)] + percent of earning based on comments who didnt win 
-            #3) liker gets 
-
-        #TODO:
-            #give miner a portion
-                #transactions need to have each user sign something on it 
-
-        distributable_revenue = total_revenue-top_comment_revenue #-whoever else gets any         
-        for k in top_comments:
-            share_portion = distributable_revenue*(revenue_per_comment[k]/top_comment_revenue) #percentage of distributable rev earned for a COMMENT is: (comment total likes / top comments total likes) 
-            #TODO:
-                #this is where you redistribute any wealth
-            
-            distributable_revenue -=  share_portion
-
-            #now distribute distributable_revenue amongst:
-                #1) whoever made the comment -> flat portion of share portion
-                #2) likers -> split up remaining share portion based on their amt liked
-            
-            #commenter gets flat percentage 
-            transactions[top_comments[k]["signature"]] = share_portion*commenter_rate
-            share_portion -= share_portion * commenter_rate        
-
-            for l in top_comments[k]["likes"]:
-                #now give people who liked a comment their share
-                #liker share_portion is top_comments[k]["likes"][l]/revenue_per_comment[k] 
-                transactions[l] += top_comments[k]["likes"][l]+ share_portion*(top_comments[k]["likes"][l]/revenue_per_comment[k])            
-
-                #share_portion -=  share_portion*(top_comments[k]["likes"][l]/revenue_per_comment[k])
-
-        return top_comments, transactions 
-  
     def compute_mass_transactions_3(self):
         block_revenue = 0        
     
@@ -235,20 +169,23 @@ class Blockchain:
             for j in self.comments[i]["likes"]:
                 block_revenue +=
 
-    def update_likes_dislikes(self, comment, likes_list, dislikes_list):
+    def update_likes(self, comment, likes_list):
         comment_signature = hashlib.sha256((comment).encode('utf-8')).hexdigest()
         
+        """
+for now dislikes are just negative likes
+            likes format: hash(uname+comment): signature, time stamp -> signature of hash of (amt+ uraddress+ recip+ timestamp) -> recip is 0 if its to app!
+        """    
         if comment_signature not in self.comments:
             print("comment does not exist!")
-        
+       
+        #algorithm: figure out who liked what 
+ 
         for i in likes_list.keys(): #keys are signed comment from each user 
             if i not in self.comments[comment_signature]["likes"]:
                 self.comments[comment_signature]["likes"][i] = likes_list[i]
         
 
-        for i in dislikes_list.keys(): #keys are signed comment from each user 
-            if i not in self.comments[comment_signature]["dislikes"]:
-                self.comments[comment_signature]["dislikes"][i] = dislikes_list[i]
 
     def consensus(self):
         chain_list = self.chain_collection
@@ -301,13 +238,15 @@ class Blockchain:
                     j-=1
                     sol.insert(self.comments[i])
         #now return comments to a dict
-        sol_d = {}
         print(sol)
+       """ 
+        sol_d = {}
         for k in sol:
             sol_d[self.hash(k['signature']+k['comment'])] = k
         return sol_d
-    
-    def mining_proof(self):
+       """
+    def check_mining_proof(self):
+        #TODO: just make sure prev top commenter signs somethin
         return True
 
     def mine(self, uname=""):
